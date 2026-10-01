@@ -8,6 +8,7 @@ gradient accumulation/clipping, optimizer offload) from cfg.training
 (e.g. select the ZeRO stage via ``training.zero_stage=1``).
 """
 
+import contextlib
 import faulthandler
 import logging
 import os
@@ -152,26 +153,20 @@ def main(cfg: DictConfig) -> None:
         print("=" * 60)
         print(OmegaConf.to_yaml(cfg))
         print("=" * 60)
-    else:
-        # Silence stray ``print(...)`` calls in vendored loaders (e.g. diffsynth's
-        # ``model_loader.py``) on non-main ranks — they otherwise print "Loading
-        # models from: ..." / "Loaded model: { ... }" once per rank, doubling
-        # the startup log. Logging-based output is unaffected.
-        import builtins
-
-        builtins.print = lambda *a, **kw: None
-
     sys.path.insert(0, str(PROJECT_ROOT))
 
     try:
-        _train(cfg)
+        # Silence worker stdout without replacing builtins.print: traceback
+        # printing also uses print(), but must remain visible on stderr.
+        with contextlib.ExitStack() as stack:
+            if local_rank != 0:
+                sink = stack.enter_context(open(os.devnull, "w"))
+                stack.enter_context(contextlib.redirect_stdout(sink))
+            _train(cfg)
     except BaseException:
-        # destroy_process_group below is a collective. If only this rank
-        # raised, the other ranks are still in mid-training collectives
-        # (e.g. accelerate's RNG-state broadcast inside dataloader.__iter__),
-        # and destroy will block forever waiting for them — masking the
-        # actual rank-0 exception. Mirror the alternate path's pre-destroy
-        # traceback print so the real error survives the deadlock.
+        # Report before propagating to torchrun, which stops the other ranks.
+        # Do not enter distributed teardown after a failure: peers can still
+        # be in training collectives and teardown can hang instead of exiting.
         import traceback as _tb
 
         rank = os.environ.get("RANK", os.environ.get("LOCAL_RANK", "?"))
@@ -180,7 +175,7 @@ def main(cfg: DictConfig) -> None:
         sys.stderr.flush()
         sys.stdout.flush()
         raise
-    finally:
+    else:
         # Avoid `destroy_process_group() was not called before program exit`
         # warning on shutdown by tearing down the NCCL process group cleanly.
         import torch.distributed as dist
