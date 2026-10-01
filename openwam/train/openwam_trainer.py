@@ -411,6 +411,11 @@ class OpenWAMTrainer:
             collate_fn=list,
             pin_memory=True,
         )
+        # Readers using native threaded decoders can opt out of fork, which
+        # may inherit unsafe Arrow/FFmpeg state after a parent-side preview.
+        worker_context = getattr(self.dataset, "multiprocessing_context", None)
+        if kwargs["num_workers"] > 0 and worker_context is not None:
+            kwargs["multiprocessing_context"] = worker_context
         if not shuffle:
             logger.info(
                 "DataLoader shuffle disabled for MixtureDataset; its shuffled index map "

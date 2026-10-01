@@ -1,0 +1,20 @@
+type: fr3_wuji
+dataset_dir: /home/descfly/lpy/openpi/data/tomato/0924-250ep
+# Raw recorded commands; output order: left arm, left hand, right arm, right hand.
+# Also set model.architecture.action_dim=54 and model.architecture.state_dim=54.
+action_mode: joint
+unify_action: false
+num_frames: 33
+video_stride: 4
+window_stride: 1
+height: 384
+width: 320
+multiview: true
+camera_layout: [observation.images.cam0, observation.images.cam1, observation.images.cam2]
+target_camera: observation.images.cam0
+# Overrides meta/info.json splits; hash source_recording_id globally across A/B.
+# project.seed is injected by scripts/train.py (default 42).
+validation_fraction: 0.1
+normalize_mode: min-max
+# Generate once before launching training; this is NOT the OpenPI norm_stats.json.
+normalization_stats_path: outputs/fr3_wuji/normalization_stats.npy

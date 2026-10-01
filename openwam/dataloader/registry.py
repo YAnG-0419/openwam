@@ -76,6 +76,7 @@ def _register_builtins():
     """Register all built-in dataset classes."""
     from openwam.dataloader.agibotworld import MultiAgiBotWorldDataset
     from openwam.dataloader.ebench import EBenchDataset
+    from openwam.dataloader.fr3_wuji import Fr3WujiDataset
     from openwam.dataloader.interndata_a1 import InternDataA1Dataset
     from openwam.dataloader.libero import LiberoDataset
     from openwam.dataloader.mixture import MixtureDataset
@@ -95,6 +96,7 @@ def _register_builtins():
     register_dataset("robocasa_gr1")(MultiRoboCasaGR1Dataset)
     register_dataset("robocoin")(MultiRobotCOINDataset)
     register_dataset("ebench")(EBenchDataset)
+    register_dataset("fr3_wuji")(Fr3WujiDataset)
     register_dataset("libero")(LiberoDataset)
     register_dataset("muka_franka")(MukaFrankaDataset)
     register_dataset("oxe_droid")(OxeDroidDataset)

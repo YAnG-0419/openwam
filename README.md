@@ -16,6 +16,10 @@
 
 ## What is OpenWAM
 
+**FR3 + Wuji tomato dataset:** this repository includes a LeRobot v2.1 reader
+for the 54-D dual-arm/dexterous-hand setup. See the
+[adapter and server training guide](assets/openwam_usage_docs/fr3-wuji.md#在服务器上拉取和训练).
+
 OpenWAM is an open research stack for systematically developing **World-Action Models (WAMs)**. It turns tightly coupled design choices into modular components and controlled experiments. It consists of:
 
 - **OpenWAM-Infra:** A modular infrastructure for composing and comparing model, representation, training, inference, deployment, and evaluation choices.
